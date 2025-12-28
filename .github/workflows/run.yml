@@ -57,44 +57,44 @@ jobs:
         echo "crawl_date=$today" >> $GITHUB_OUTPUT
         echo "爬取完成 / Crawling completed"
         
-    - name: Check for duplicates
-      id: dedup_check
-      run: |
-        source .venv/bin/activate
-        echo "执行去重检查... / Performing intelligent deduplication check..."
+    # - name: Check for duplicates
+    #   id: dedup_check
+    #   run: |
+    #     source .venv/bin/activate
+    #     echo "执行去重检查... / Performing intelligent deduplication check..."
         
-        cd daily_arxiv
-        # 执行去重检查脚本 / Execute intelligent deduplication check script
-        set +e  # 暂时允许命令失败 / Temporarily allow command failure
-        python daily_arxiv/check_stats.py
+    #     cd daily_arxiv
+    #     # 执行去重检查脚本 / Execute intelligent deduplication check script
+    #     set +e  # 暂时允许命令失败 / Temporarily allow command failure
+    #     python daily_arxiv/check_stats.py
         
-        # 获取退出码 / Get exit code
-        dedup_exit_code=$?
-        set -e  # 恢复严格模式 / Restore strict mode
+    #     # 获取退出码 / Get exit code
+    #     dedup_exit_code=$?
+    #     set -e  # 恢复严格模式 / Restore strict mode
         
-        echo "去重检查退出码: $dedup_exit_code / Dedup check exit code: $dedup_exit_code"
-        echo "dedup_exit_code=$dedup_exit_code" >> $GITHUB_OUTPUT
+    #     echo "去重检查退出码: $dedup_exit_code / Dedup check exit code: $dedup_exit_code"
+    #     echo "dedup_exit_code=$dedup_exit_code" >> $GITHUB_OUTPUT
         
-        case $dedup_exit_code in
-            0)
-                echo "has_new_content=true" >> $GITHUB_OUTPUT
-                ;;
-            1)
-                echo "has_new_content=false" >> $GITHUB_OUTPUT
-                echo "skip_reason=no_new_content" >> $GITHUB_OUTPUT
-                ;;
-            2)
-                echo "has_new_content=false" >> $GITHUB_OUTPUT
-                echo "skip_reason=processing_error" >> $GITHUB_OUTPUT
-                exit 1
-                ;;
-            *)
-                echo "❌ 未知退出码，停止工作流 / Unknown exit code, stop workflow"
-                echo "has_new_content=false" >> $GITHUB_OUTPUT
-                echo "skip_reason=unknown_error" >> $GITHUB_OUTPUT
-                exit 1
-                ;;
-        esac
+    #     case $dedup_exit_code in
+    #         0)
+    #             echo "has_new_content=true" >> $GITHUB_OUTPUT
+    #             ;;
+    #         1)
+    #             echo "has_new_content=false" >> $GITHUB_OUTPUT
+    #             echo "skip_reason=no_new_content" >> $GITHUB_OUTPUT
+    #             ;;
+    #         2)
+    #             echo "has_new_content=false" >> $GITHUB_OUTPUT
+    #             echo "skip_reason=processing_error" >> $GITHUB_OUTPUT
+    #             exit 1
+    #             ;;
+    #         *)
+    #             echo "❌ 未知退出码，停止工作流 / Unknown exit code, stop workflow"
+    #             echo "has_new_content=false" >> $GITHUB_OUTPUT
+    #             echo "skip_reason=unknown_error" >> $GITHUB_OUTPUT
+    #             exit 1
+    #             ;;
+    #     esac
         
     - name: AI Enhancement Processing
       if: steps.dedup_check.outputs.has_new_content == 'true'
