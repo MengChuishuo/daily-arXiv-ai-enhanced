@@ -57,27 +57,28 @@ jobs:
         echo "crawl_date=$today" >> $GITHUB_OUTPUT
         echo "爬取完成 / Crawling completed"
         
-    # - name: Check for duplicates
-    #   id: dedup_check
-    #   run: |
-    #     source .venv/bin/activate
-    #     echo "执行去重检查... / Performing intelligent deduplication check..."
-        
-    #     set +e
-    #     python daily_arxiv/check_stats.py
-    #     status=$?
-    #     set -e
+    - name: Check for duplicates
+      id: dedup_check
+      run: |
+        source .venv/bin/activate
+        echo "执行去重检查... / Performing intelligent deduplication check..."
 
-    #     echo "去重检查退出码: $status"
+        cd daily_arxiv
+        set +e
+        python daily_arxiv/check_stats.py
+        status=$?
+        set -e
 
-    #     if [ $status -eq 0 ]; then
-    #       echo "has_new_content=true" >> $GITHUB_OUTPUT
-    #     else
-    #       echo "has_new_content=false" >> $GITHUB_OUTPUT
-    #     fi
+        echo "去重检查退出码: $status"
+
+        if [ $status -eq 0 ]; then
+          echo "has_new_content=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_new_content=false" >> $GITHUB_OUTPUT
+        fi
         
     - name: AI Enhancement Processing
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         source .venv/bin/activate
         today=${{ steps.crawl_step.outputs.crawl_date }}
@@ -99,7 +100,7 @@ jobs:
         echo "AI增强处理完成 / AI enhancement processing completed"
         
     - name: Convert to Markdown
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         source .venv/bin/activate
         today=${{ steps.crawl_step.outputs.crawl_date }}
@@ -130,14 +131,14 @@ jobs:
         echo "Markdown转换完成 / Markdown conversion completed"
         
     - name: Update file list
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         echo "更新文件列表... / Updating file list..."
         ls data/*.jsonl | sed 's|data/||' > assets/file-list.txt
         echo "文件列表更新完成 / File list updated"
 
     - name: Generate password hash and inject into config
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         echo "🔐 Generating password hash for authentication..."
 
@@ -172,27 +173,27 @@ jobs:
 
     - name: Summary
       run: |
-        # if [ "${{ steps.dedup_check.outputs.has_new_content }}" = "true" ]; then
-        echo "✅ 工作流完成：去重发现新内容并成功处理 / Workflow completed: Smart deduplication found new content and processed successfully"
-        # else
-        #   case "${{ steps.dedup_check.outputs.skip_reason }}" in
-        #     "no_new_content")
-        #       echo "ℹ️ 工作流完成：去重后无新内容 / Workflow completed: No new content after smart deduplication"
-        #       ;;
-        #     "processing_error")
-        #       echo "⚠️ 工作流完成：去重处理出错 / Workflow completed: Deduplication processing error"
-        #       ;;
-        #     "unknown_error")
-        #       echo "⚠️ 工作流完成：未知错误 / Workflow completed: Unknown error"
-        #       ;;
-        #     *)
-        #       echo "ℹ️ 工作流完成：未知原因跳过处理 / Workflow completed: Skipped for unknown reason"
-        #       ;;
-        #   esac
-        # fi
+        if [ "${{ steps.dedup_check.outputs.has_new_content }}" = "true" ]; then
+          echo "✅ 工作流完成：去重发现新内容并成功处理 / Workflow completed: Smart deduplication found new content and processed successfully"
+        else
+          case "${{ steps.dedup_check.outputs.skip_reason }}" in
+            "no_new_content")
+              echo "ℹ️ 工作流完成：去重后无新内容 / Workflow completed: No new content after smart deduplication"
+              ;;
+            "processing_error")
+              echo "⚠️ 工作流完成：去重处理出错 / Workflow completed: Deduplication processing error"
+              ;;
+            "unknown_error")
+              echo "⚠️ 工作流完成：未知错误 / Workflow completed: Unknown error"
+              ;;
+            *)
+              echo "ℹ️ 工作流完成：未知原因跳过处理 / Workflow completed: Skipped for unknown reason"
+              ;;
+          esac
+        fi
         
     - name: Commit changes
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         git config --global user.email "${{ vars.EMAIL }}"
         git config --global user.name "${{ vars.NAME }}"
@@ -206,7 +207,7 @@ jobs:
         echo "变更已提交 / Changes committed"
         
     - name: Pull latest changes and push
-      # if: steps.dedup_check.outputs.has_new_content == 'true'
+      if: steps.dedup_check.outputs.has_new_content == 'true'
       run: |
         # 设置Git配置以处理自动合并 / Set Git config for automatic merging
         git config pull.rebase true
